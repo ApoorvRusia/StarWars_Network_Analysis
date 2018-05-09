@@ -8,3 +8,5 @@ The project was created towards the course: IN SC 846 Network and Predictive Ana
 4. Their reach and information distribution capacity.  
 
 Tools and packages used - RStudio with igraph package data source: http://www.imsdb.com/
+
+The final project report - https://rpubs.com/apoorvrusia/starwars_networkAnalysis
