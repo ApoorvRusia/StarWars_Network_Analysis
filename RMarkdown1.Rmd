@@ -1,0 +1,275 @@
+---
+title: "Star Wars Network Analysis"
+output:
+  html_document:
+    df_print: paged
+  html_notebook: default
+  pdf_document: default
+  word_document: default
+---
+
+
+```{r pressure, echo=FALSE, out.width = '100%'}
+knitr::include_graphics("starwars.jpg")
+```
+
+
+```{r}
+library(igraph)
+library(readr)
+library(threejs)
+library(sqldf)
+library(knitr)
+library(knitLatex)
+```
+#################
+# 1. Reading the data#
+#################
+
+```{r}
+dataEdge1 <- read_csv('chapter1Edges.csv')
+dataVertices1 <- read_csv('chapter1Vertices.csv')
+dataEdge2 <- read_csv('chapter2Edges.csv')
+dataVertices2 <- read_csv('chapter2Vertices.csv')
+dataEdge3 <- read_csv('chapter3Edges.csv')
+dataVertices3 <- read_csv('chapter3Vertices.csv')
+dataEdge4 <- read_csv('chapter4Edges.csv')
+dataVertices4 <- read_csv('chapter4Vertices.csv')
+dataEdge5 <- read_csv('chapter5Edges.csv')
+dataVertices5 <- read_csv('chapter5Vertices.csv')
+dataEdge6 <- read_csv('chapter6Edges.csv')
+dataVertices6 <- read_csv('chapter6Vertices.csv')
+dataEdge7 <- read_csv('chapter7Edges.csv')
+dataVertices7 <- read_csv('chapter7Vertices.csv')
+dataEdgeAll <- read_csv('AllchapterEdges.csv')
+dataVerticesAll <- read_csv('AllchapterVertices.csv')
+```
+
+Adding information about the Actors like appearance on the screen and number of conversations
+
+```{r}
+info_detail <- function(df_ver, df_edg){
+
+edg1 <- sqldf("select source,SUM(value) as value1 from df_edg group by source")
+edg2 <- sqldf("select target,SUM(value) as value2 from df_edg group by target")
+edg_tot <- merge(edg1,edg2,by.x=c("source"),by.y = c("target"),all = TRUE)
+edg_tot[is.na(edg_tot)] <- 0
+edg_tot$total_edges <- edg_tot$value1+edg_tot$value2
+edg_tot <- subset(edg_tot,select = c(source,total_edges))
+final <- merge(edg_tot,df_ver,by="source",all = TRUE)
+final[is.na(final)] <- 0
+final$all_info <- paste(final$source,", # conversation -",final$total_edges,", # appearance -",final$appearance,sep = " ")
+return(final)}
+
+dataVertices1 <- info_detail(dataVertices1, dataEdge1)
+dataVertices2 <- info_detail(dataVertices2, dataEdge2)
+dataVertices3 <- info_detail(dataVertices3, dataEdge3)
+dataVertices4 <- info_detail(dataVertices4, dataEdge4)
+dataVertices5 <- info_detail(dataVertices5, dataEdge5)
+dataVertices6 <- info_detail(dataVertices6, dataEdge6)
+dataVertices7 <- info_detail(dataVertices7, dataEdge7)
+dataVerticesAll <- info_detail(dataVerticesAll, dataEdgeAll)
+
+```
+
+
+#################
+# 2. Setting the graph objects#
+#################
+```{r}
+g1 <- graph_from_data_frame(d = dataEdge1, vertices = dataVertices1, directed = FALSE)
+g2 <- graph_from_data_frame(d = dataEdge2, vertices = dataVertices2, directed = FALSE)
+g3 <- graph_from_data_frame(d = dataEdge3, vertices = dataVertices3, directed = FALSE)
+g4 <- graph_from_data_frame(d = dataEdge4, vertices = dataVertices4, directed = FALSE)
+g5 <- graph_from_data_frame(d = dataEdge5, vertices = dataVertices5, directed = FALSE)
+g6 <- graph_from_data_frame(d = dataEdge6, vertices = dataVertices6, directed = FALSE)
+g7 <- graph_from_data_frame(d = dataEdge7, vertices = dataVertices7, directed = FALSE)
+gAll <- graph_from_data_frame(d = dataEdgeAll, vertices = dataVerticesAll, directed = FALSE)
+
+```
+
+#################
+# 3. Plotting the graphs for all the episodes#
+#################
+
+```{r}
+#StarWars Episode 1: The Phantom Menace
+plot(g1, vertex.size = 0.7*dataVertices1$appearance, vertex.label.cex = 0.6, vertex.color = dataVertices1$color, layout = layout.circle(g1), edge.width = 0.5*dataEdge1$value, vertex.frame.color = 'tomato', vertex.label.dist = 4, edge.curved = 0.25,edge.color = 'orange',rescale=TRUE, vertex.shape= "sphere", frame = TRUE, main = 'StarWars Episode 1: The Phantom Menace')
+#StarWars Episode 2: Attack of the Clones
+plot(g2, vertex.size = 0.7*dataVertices2$appearance, vertex.label.cex = 0.6, vertex.color = dataVertices2$color, layout = layout.circle(g2), edge.width = 0.5*dataEdge2$value, vertex.frame.color = 'tomato', vertex.label.dist = 4, edge.curved = 0.25,edge.color = 'orange', rescale=TRUE, frame = TRUE, vertex.shape= "sphere", main = 'StarWars Episode 2: Attack of the Clones')
+#StarWars Episode 3: Revenge of the Sith
+plot(g3, vertex.size = 0.7*dataVertices3$appearance, vertex.label.cex = 0.6, vertex.color = dataVertices3$color, layout = layout.circle(g3), edge.width = 0.5*dataEdge3$value,vertex.frame.color = 'tomato', vertex.label.dist = 4, edge.curved = 0.25, edge.color = 'orange', frame = TRUE,  rescale=TRUE, vertex.shape= "sphere", main = 'StarWars Episode 3: Revenge of the Sith')
+#StarWars Episode 4: A New Hope
+plot(g4, vertex.size = 0.7*dataVertices4$appearance, vertex.label.cex = 0.6, vertex.color = dataVertices4$color, layout = layout.circle(g4), edge.width = 0.5*dataEdge4$value,vertex.frame.color = 'tomato', vertex.label.dist = 4, edge.curved = 0.25,edge.color = 'orange', frame = TRUE, rescale=TRUE,vertex.shape= "sphere", main = 'StarWars Episode 4: A New Hope')
+#StarWars Episode 5: The Empire Strikes Back
+plot(g5, vertex.size = 0.7*dataVertices5$appearance, vertex.label.cex = 0.6, vertex.color = dataVertices5$color, layout = layout.circle(g5), edge.width = 0.5*dataEdge5$value,vertex.frame.color = 'tomato', vertex.label.dist = 4, edge.curved = 0.25, edge.color = 'orange', rescale=TRUE, frame = TRUE, vertex.shape= "sphere", main = 'StarWars Episode 5: The Empire Strikes Back')
+#StarWars Episode 6: Return of the Jedi
+plot(g6, vertex.size = 0.7*dataVertices6$appearance, vertex.label.cex = 0.6, vertex.color = dataVertices6$color, layout = layout.circle(g6), edge.width = 0.5*dataEdge6$value,vertex.frame.color = 'tomato', vertex.label.dist = 4, edge.curved = 0.25, edge.color = 'orange', frame = TRUE, rescale=TRUE, vertex.shape= "sphere", main = 'StarWars Episode 6: Return of the Jedi')
+#StarWars Episode 7: The force Awakens
+plot(g7, vertex.size = 0.7*dataVertices7$appearance, vertex.label.cex = 0.6, vertex.color = dataVertices7$color, layout = layout.circle(g7), edge.width = 0.5*dataEdge7$value,vertex.frame.color = 'tomato', vertex.label.dist = 4, edge.curved = 0.25, edge.color = 'orange', rescale=TRUE, frame = TRUE, vertex.shape= "sphere", main = 'StarWars Episode 7: The force Awakens')
+#StarWars Episodes 1 to 7
+plot(gAll, vertex.size = 0.3*dataVerticesAll$appearance, vertex.label.cex = 0.6, vertex.color = dataVerticesAll$color, layout = layout.circle(gAll),edge.color = "orange", edge.width = 0.5*dataEdgeAll$value/5, vertex.frame.color = 'tomato', vertex.label.dist = 4, edge.curved = 0.25,rescale=TRUE, frame = TRUE,  vertex.shape= "sphere", main = 'StarWars Episodes 1 to 7')
+
+```
+
+#################
+# 4. Cleaning the final network of all the episodes combined with # conversation and # appearance of atleast 20#
+#################
+```{r}
+#creating new dataframe for Actors who conversed more than 30 times in episodes 1 to 7 combined
+df <- dataVerticesAll[order(-dataVerticesAll$total_edges),]
+df <- df[df$total_edges>=20,]
+df <- df[df$appearance>=20,]
+#using variable to extract the conversation from the edge dataframe
+nam <- df$source
+
+samp1 <- subset(dataEdgeAll,source %in% nam)
+samp2 <- subset(dataEdgeAll,target %in% nam)
+total_rec <- rbind(samp1,samp2)
+total_rec <- unique(total_rec)
+total_rec <-  subset(total_rec,source %in% nam)
+total_rec <-  subset(total_rec,target %in% nam)
+#creating graph object
+g30 <- graph_from_data_frame(d = total_rec  , vertices = df, directed = FALSE)
+#interactive graph
+plot(g30, vertex.size = 0.3*V(g30)$appearance, vertex.label.cex = 0.6, vertex.color = V(g30)$color, layout = layout.circle(g30),edge.color = "orange", edge.width = 0.5*E(g30)$value/4, vertex.frame.color = 'tomato', vertex.label.dist = 4, edge.curved = 0.25,rescale=TRUE, frame = TRUE,  vertex.shape= "sphere", main = 'StarWars Episodes 1 to 7')
+#creating network graph.
+graphjs(g30, vertex.size = 0.1*V(g30)$appearance/2 , vertex.color = V(g30)$color,edge.color = "gold", main = 'StarWars Episodes 1 to 7  (cleaned)', layout = layout_on_sphere, brush = TRUE, vertex.shape= "sphere", vertex.label = V(g30)$all_info, edge.curved = 0.25 )
+```
+
+
+#################
+# 5. Interactive graph for episodes 1#
+#################
+```{r}
+graphjs(g1, vertex.size = 0.2* dataVertices1$appearance, edge.color = "orange", showLabels = TRUE, edge.size =dataEdge1$value, brush=TRUE, vertex.label = dataVertices1$all_info, edge.curved = 0.2,rescale=FALSE, vertex.shape= "sphere", layout = layout_on_sphere, main = 'StarWars Episode 1: The Phantom Menace' )
+```
+
+
+#################
+# 6. Community detection for Episode 2 with edge.betweenness approach#
+#################
+```{r}
+# Community detection
+abc <- edge.betweenness.community(g2)
+sizes(abc)
+membership(abc)
+plot(abc,g2, main = 'Community detection: Edge.betweenness', vertex.shape= "sphere")
+legend(x=-1.5, y= -1.1, c('Community 1','Community 2','Community 3','Community 4','Community 5','Community 6','Community 7','Community 8'), pch = 21,pt.bg = c("yellow","red","blue","green","brown","skyblue","magenta","orange"), pt.cex=2, cex=.8, ncol=2  )
+
+mem <- membership(abc)
+gc<- set_vertex_attr(g2,"color1", value = c("yellow","red","blue","green","brown","skyblue","magenta","orange")[mem])
+
+graphjs(gc,vertex.label = V(gc)$all_info, vertex.size =3, vertex.label.cex = 0.4, vertex.color = V(gc)$color1, rescale=FALSE, brush = TRUE, main = 'Community detection: Edge.betweenness', vertex.shape= "sphere" )
+```
+
+#################
+# 7. Community detection for Episode 2 with fastgreedy approach#
+#################
+```{r}
+# Community detection
+abc <- fastgreedy.community(g2)
+sizes(abc)
+membership(abc)
+plot(abc,g2, main = 'Community detection: fastgreedy', vertex.shape= "sphere" )
+legend(x=-1.5, y= -1.1, c('Community 1','Community 2','Community 3'), pch = 21,pt.bg = c("yellow","red","blue"), pt.cex=2, cex=.8, ncol=2  )
+
+mem <- membership(abc)
+gc<- set_vertex_attr(g2,"color", value = c("yellow","red","blue")[mem])
+graphjs(gc,vertex.label = V(gc)$all_info, vertex.size =3, vertex.label.cex = 0.4, edge.curved = 0.2,rescale=FALSE, brush = TRUE, main = 'Community detection: fastgreedy', vertex.shape= "sphere" )
+
+```
+
+
+#################
+# 8. Finding Anakin's connections in Episode 1#
+#################
+```{r}
+# Find ANAKIN's connection
+neigh <- neighbors(g1,"ANAKIN", mode = c("all"))
+neigh
+```
+
+
+#################
+# 9. Degree and betweenness in Episode 1#
+#################
+```{r}
+# Degree and betweenness
+deg <- igraph::degree(g1,mode=c("all"))
+deg
+which.max(deg)
+
+igraph::betweenness(g1,directed = FALSE, normalized= TRUE)
+
+```
+
+#################
+# 10. Eigen Centrality for Episode 1#
+#################
+```{r}
+#Eigen centrality
+eigen_centrality(g1)$vector
+```
+
+#################
+# 11. Edge density for Episode 1#
+#################
+
+graph density = no of edges/total no of possible edges
+```{r}
+edge_density(g1)
+```
+
+#################
+# 12. Mean path and clique for Episode 1#
+#################
+Mean distance - Mean path length is a concept in network topology that is defined as the average number of steps along the shortest paths for all possible pairs of network nodes. It is a measure of the efficiency of information or mass transport on a network.
+
+Clique - A clique, C, in an undirected graph G = (V, E) is a subset of the vertices, C ??? V, such that every two distinct vertices are adjacent. This is equivalent to the condition that the induced subgraph of G induced by C is a complete graph.
+```{r}
+#Mean path
+mean_distance(g1,directed=FALSE)
+
+#Clique
+largest_cliques(g1)
+```
+
+
+#################
+# 13. Actors who appeared more than 100 times in all Episodes combined#
+#################
+```{r}
+color_gAll <-ifelse(V(gAll)$appearance > 100, 'red', 'green')
+graphjs(gAll, vertex.label = dataVerticesAll$all_info, vertex.size =  dataVerticesAll$appearance/20, brush = TRUE, vertex.color = color_gAll, rescale = TRUE, edge.color = 'gold', main = 'Star Wars Episode 1 to 7', vertex.shape= "sphere", layout = layout_on_sphere)
+```
+
+
+#################
+# 14. Actors who conversed more than 30 times in Episodes 1 to 7 combined#
+#################
+```{r}
+#creating new dataframe for Actors who conversed more than 30 times in episodes 1 to 7 combined
+df <- dataVerticesAll[order(-dataVerticesAll$total_edges),]
+df <- df[df$total_edges>30,]
+#using variable to extract the conversation from the edge dataframe
+nam <- df$source
+
+samp1 <- subset(dataEdgeAll,source %in% nam)
+samp2 <- subset(dataEdgeAll,target %in% nam)
+total_rec <- rbind(samp1,samp2)
+total_rec <- unique(total_rec)
+total_rec <-  subset(total_rec,source %in% nam)
+total_rec <-  subset(total_rec,target %in% nam)
+#creating graph object
+g30 <- graph_from_data_frame(d = total_rec  , vertices = df, directed = FALSE)
+#creating network graph.
+graphjs(g30, vertex.size = 0.1*V(g30)$appearance/2 , vertex.color = V(g30)$color,edge.color = "gold", main = 'StarWars Episodes 1 to 7', layout = layout_on_sphere, brush = TRUE, vertex.label = V(g30)$all_info, vertex.shape= "sphere")
+``` 
+
+#################
+# THANK YOU#
+#################
+```{r echo=FALSE, fig.cap="NOOOOOOOOOOOOOOOOOOO", out.width = '100%'}
+knitr::include_graphics("darth.jpg")
+```
